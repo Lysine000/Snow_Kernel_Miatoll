@@ -1,0 +1,104 @@
+name: Build Snow Kernel
+
+on:
+  push:
+    branches:
+      - snow-android10
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Kernel
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bc build-essential libncurses5-dev libssl-dev bison flex libelf-dev clang lld llvm libssl-dev mkbootimg dtc zip
+
+      - name: Clone Toolchain
+        run: |
+          git clone --depth=1 https://github.com/kdrag0n/proton-clang.git $GITHUB_WORKSPACE/proton-clang
+
+      - name: Clone AnyKernel3
+        run: |
+          git clone --depth=1 https://github.com/osm0sis/AnyKernel3.git $GITHUB_WORKSPACE/anykernel
+
+      - name: Build Kernel
+        run: |
+          export PATH=$GITHUB_WORKSPACE/proton-clang/bin:$PATH
+          export ARCH=arm64
+          export SUBARCH=arm64
+          export HEADER_ARCH=arm64
+          
+          # Configure
+          make O=out cust_defconfig
+          
+          # Build
+          make -j$(nproc --all) O=out \
+            CC=clang \
+            CLANG_TRIPLE=aarch64-linux-gnu- \
+            CROSS_COMPILE=aarch64-linux-gnu- \
+            CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+            Image.gz-dtb dtbo.img 2>&1 | tee build.log
+
+      - name: Package with AnyKernel3
+        if: success()
+        run: |
+          # Copy outputs
+          cp out/arch/arm64/boot/Image.gz-dtb $GITHUB_WORKSPACE/anykernel/
+          cp out/arch/arm64/boot/dtbo.img $GITHUB_WORKSPACE/anykernel/
+          
+          # Configure anykernel.sh
+          cd $GITHUB_WORKSPACE/anykernel
+          sed -i 's/kernel.string=.*/kernel.string=Snow Kernel by Antigravity/g' anykernel.sh
+          sed -i 's/device.name1=.*/device.name1=excalibur/g' anykernel.sh
+          sed -i 's/device.name2=.*/device.name2=miatoll/g' anykernel.sh
+          sed -i 's/device.name3=.*/device.name3=curtana/g' anykernel.sh
+          sed -i 's/device.name4=.*/device.name4=joyeuse/g' anykernel.sh
+          sed -i 's/device.name5=.*/device.name5=gram/g' anykernel.sh
+          sed -i 's|BLOCK=.*;|BLOCK=/dev/block/bootdevice/by-name/boot;|g' anykernel.sh
+          sed -i 's/IS_SLOT_DEVICE=.*/IS_SLOT_DEVICE=0;/g' anykernel.sh
+          
+          # Zip
+          zip -r9 ../Snow-Kernel-Miatoll-${{ github.sha }}.zip * -x .git README.md
+
+      - name: Upload Artifact
+        if: success()
+        uses: actions/upload-artifact@v3
+        with:
+          name: Snow-Kernel-Miatoll
+          path: Snow-Kernel-Miatoll-*.zip
+
+      - name: Upload Build Log on Failure
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-log
+          path: build.log
+
+      - name: Create Release
+        if: success()
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: snow-android10-${{ github.sha }}
+          name: Snow Kernel for Miatoll (${{ github.sha }})
+          body: |
+            ## Snow Kernel for Xiaomi Miatoll (Redmi Note 9 Pro Max / Poco M2 Pro)
+            
+            **Details:**
+            - **Kernel Base Version:** 4.14.117
+            - **Target Android Version:** Android 10 (Snapdragon 720G / excalibur)
+            - **KernelSU-Next:** Included (Integrated manually in FS & input paths)
+            - **Module Loading:** Unsigned and self-built module loading is enabled trust-wise (dm-verity / AVB boot chain constraints untouched).
+            - **SELinux:** Enforcing by default.
+            - **CPU Governor:** schedutil.
+            - **I/O Scheduler:** CFQ.
+          files: Snow-Kernel-Miatoll-*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
