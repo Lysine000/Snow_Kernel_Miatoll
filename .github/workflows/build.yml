@@ -100,7 +100,7 @@ jobs:
             ## Snow Kernel for Xiaomi Miatoll (Redmi Note 9 Pro Max / Poco M2 Pro)
             
             **Details:**
-            - **Kernel Base Version:** 4.14.117
+            - **Kernel Base Version:** 4.14.190
             - **Target Android Version:** Android 10 (Snapdragon 720G / excalibur)
             - **KernelSU-Next:** Included (Integrated manually in FS & input paths)
             - **Module Loading:** Unsigned and self-built module loading is enabled trust-wise (dm-verity / AVB boot chain constraints untouched).
