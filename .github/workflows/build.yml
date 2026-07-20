@@ -31,6 +31,7 @@ jobs:
 
       - name: Build Kernel
         run: |
+          set -o pipefail
           export PATH=$GITHUB_WORKSPACE/proton-clang/bin:$PATH
           export ARCH=arm64
           export SUBARCH=arm64
@@ -42,6 +43,7 @@ jobs:
           # Build
           make -j$(nproc --all) O=out \
             CC=clang \
+            LD=ld.lld \
             CLANG_TRIPLE=aarch64-linux-gnu- \
             CROSS_COMPILE=aarch64-linux-gnu- \
             CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
