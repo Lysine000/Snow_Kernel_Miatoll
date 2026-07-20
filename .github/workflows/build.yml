@@ -74,14 +74,14 @@ jobs:
           sed -i 's/IS_SLOT_DEVICE=.*/IS_SLOT_DEVICE=0;/g' anykernel.sh
           
           # Zip
-          zip -r9 ../Snow-Kernel-Miatoll-${{ github.sha }}.zip * -x .git README.md
+          zip -r9 ../Snow-Kernel-Miatoll.zip * -x .git README.md
 
       - name: Upload Artifact
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: Snow-Kernel-Miatoll
-          path: Snow-Kernel-Miatoll-*.zip
+          path: Snow-Kernel-Miatoll.zip
 
       - name: Upload Build Log on Failure
         if: failure()
@@ -107,6 +107,6 @@ jobs:
             - **SELinux:** Enforcing by default.
             - **CPU Governor:** schedutil.
             - **I/O Scheduler:** CFQ.
-          files: Snow-Kernel-Miatoll-*.zip
+          files: Snow-Kernel-Miatoll.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
