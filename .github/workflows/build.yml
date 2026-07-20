@@ -19,7 +19,7 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y bc build-essential libncurses5-dev libssl-dev bison flex libelf-dev clang lld llvm libssl-dev mkbootimg dtc zip
+          sudo apt-get install -y bc build-essential libncurses5-dev libssl-dev bison flex libelf-dev clang lld llvm mkbootimg device-tree-compiler zip
 
       - name: Clone Toolchain
         run: |
