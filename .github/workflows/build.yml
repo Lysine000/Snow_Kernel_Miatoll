@@ -94,8 +94,8 @@ jobs:
         if: success()
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: snow-android10-${{ github.sha }}
-          name: Snow Kernel for Miatoll (${{ github.sha }})
+          tag_name: v1.0.0
+          name: Snow Kernel v1.0.0
           body: |
             ## Snow Kernel for Xiaomi Miatoll (Redmi Note 9 Pro Max / Poco M2 Pro)
             
