@@ -34,13 +34,42 @@ jobs:
       - name: Build Kernel
         run: |
           set -o pipefail
-          export PATH=$GITHUB_WORKSPACE/proton-clang/bin:$PATH
+          
+          # Create symlinks for LLVM binutils
+          mkdir -p bin
+          ln -sf $GITHUB_WORKSPACE/proton-clang/bin/llvm-ar bin/aarch64-linux-gnu-ar
+          ln -sf $GITHUB_WORKSPACE/proton-clang/bin/llvm-nm bin/aarch64-linux-gnu-nm
+          ln -sf $GITHUB_WORKSPACE/proton-clang/bin/llvm-objcopy bin/aarch64-linux-gnu-objcopy
+          ln -sf $GITHUB_WORKSPACE/proton-clang/bin/llvm-strip bin/aarch64-linux-gnu-strip
+          ln -sf $GITHUB_WORKSPACE/proton-clang/bin/ld.lld bin/aarch64-linux-gnu-ld
+          
+          ln -sf $GITHUB_WORKSPACE/proton-clang/bin/llvm-ar bin/arm-linux-gnueabi-ar
+          ln -sf $GITHUB_WORKSPACE/proton-clang/bin/llvm-nm bin/arm-linux-gnueabi-nm
+          ln -sf $GITHUB_WORKSPACE/proton-clang/bin/llvm-objcopy bin/arm-linux-gnueabi-objcopy
+          ln -sf $GITHUB_WORKSPACE/proton-clang/bin/llvm-strip bin/arm-linux-gnueabi-strip
+          ln -sf $GITHUB_WORKSPACE/proton-clang/bin/ld.lld bin/arm-linux-gnueabi-ld
+          
+          export PATH=$GITHUB_WORKSPACE/bin:$GITHUB_WORKSPACE/proton-clang/bin:$PATH
+          rm -f $GITHUB_WORKSPACE/proton-clang/bin/ld
+          
           export ARCH=arm64
           export SUBARCH=arm64
           export HEADER_ARCH=arm64
           
           # Configure
           make O=out cust_defconfig
+          
+          # Patch config - disable signature checking, enable MODVERSIONS and forced loads
+          ./scripts/config --file out/.config \
+            -e MODULES \
+            -d MODULE_SIG \
+            -d MODULE_SIG_FORCE \
+            -d MODULE_SIG_ALL \
+            -e MODVERSIONS \
+            -e MODULE_UNLOAD \
+            -e MODULE_FORCE_LOAD \
+            -e MODULE_FORCE_UNLOAD
+          make O=out ARCH=arm64 olddefconfig
           
           # Build
           make -j$(nproc --all) O=out \

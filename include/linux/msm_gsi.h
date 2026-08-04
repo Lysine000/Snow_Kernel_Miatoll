@@ -11,6 +11,13 @@
  */
 #ifndef MSM_GSI_H
 #define MSM_GSI_H
+
+#ifdef __GENKSYMS__
+#ifdef __packed
+#undef __packed
+#define __packed
+#endif
+#endif
 #include <linux/types.h>
 #include <linux/interrupt.h>
 
